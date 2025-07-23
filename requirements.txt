@@ -1,5 +1,4 @@
 python-telegram-bot
 selenium
-webdriver-manager
 Flask
 nest-asyncio
