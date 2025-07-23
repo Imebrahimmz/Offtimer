@@ -2,6 +2,7 @@ import os
 import time
 import logging
 import threading
+import asyncio
 from flask import Flask
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -22,7 +23,6 @@ from telegram.ext import (
 )
 
 # --- Flask Web Server Setup ---
-# This part keeps the Render service alive
 app = Flask(__name__)
 @app.route('/')
 def health_check():
@@ -113,11 +113,26 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     if 'driver' in context.user_data: context.user_data['driver'].quit()
     return ConversationHandler.END
 
-def run_bot():
+# --- NEW: Main execution logic ---
+
+def run_flask():
+    """Runs the Flask web server in a separate thread."""
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
+
+async def main():
     """Sets up and runs the Telegram bot."""
     if not TELEGRAM_TOKEN:
         print("Error: TELEGRAM_TOKEN environment variable not set!")
         return
+
+    # Run Flask in a separate thread
+    flask_thread = threading.Thread(target=run_flask)
+    flask_thread.daemon = True
+    flask_thread.start()
+    print(f"Web server started in a background thread.")
+
+    # Set up the bot application
     application = Application.builder().token(TELEGRAM_TOKEN).build()
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
@@ -128,17 +143,11 @@ def run_bot():
         fallbacks=[CommandHandler("cancel", cancel)],
     )
     application.add_handler(conv_handler)
-    print("Bot is running in a thread...")
-    application.run_polling()
+    
+    # Run the bot
+    print("Bot is starting polling...")
+    await application.run_polling()
 
 
-# --- Main Execution ---
 if __name__ == "__main__":
-    # Start the bot in a separate thread so it doesn't block the web server
-    bot_thread = threading.Thread(target=run_bot)
-    bot_thread.start()
-
-    # Run the Flask web server to keep Render's service alive
-    port = int(os.environ.get("PORT", 8080))
-    print(f"Web server starting on port {port}...")
-    app.run(host="0.0.0.0", port=port)
+    asyncio.run(main())
