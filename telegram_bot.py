@@ -48,7 +48,7 @@ def get_driver():
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
-    # The Dockerfile now installs chromedriver, so we don't need webdriver-manager
+    # The Dockerfile now installs chromedriver, so Selenium will find it automatically.
     return webdriver.Chrome(service=ChromeService(), options=chrome_options)
 
 # --- Bot Functions ---
