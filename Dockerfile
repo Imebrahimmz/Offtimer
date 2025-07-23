@@ -4,43 +4,18 @@ FROM python:3.10-slim
 # Set the working directory in the container
 WORKDIR /app
 
-# 1. Install system dependencies required by Selenium and Chrome
+# 1. Install system dependencies and add Google's official repository
 RUN apt-get update && apt-get install -y \
-    # Utilities
     wget \
-    unzip \
-    # Chrome dependencies
-    libglib2.0-0 \
-    libnss3 \
-    libgconf-2-4 \
-    libfontconfig1 \
-    libx11-6 \
-    libx11-xcb1 \
-    libxcb1 \
-    libxcomposite1 \
-    libxcursor1 \
-    libxdamage1 \
-    libxext6 \
-    libxfixes3 \
-    libxi6 \
-    libxrandr2 \
-    libxrender1 \
-    libxss1 \
-    libxtst6 \
-    libasound2 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libdbus-1-3 \
-    libdrm2 \
-    libgbm1 \
-    libgtk-3-0 \
-    libpango-1.0-0 \
-    --no-install-recommends
+    gnupg \
+    --no-install-recommends \
+    && wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
 
-# 2. Download and install Google Chrome
-RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-RUN apt-get install -y ./google-chrome-stable_current_amd64.deb
+# 2. Install Google Chrome Stable. The chromedriver is included automatically.
+RUN apt-get update && apt-get install -y \
+    google-chrome-stable \
+    --no-install-recommends
 
 # 3. Copy requirements and install Python packages
 COPY requirements.txt .
