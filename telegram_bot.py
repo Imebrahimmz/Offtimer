@@ -51,7 +51,7 @@ def get_driver():
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=chrome_options)
     return driver
 
-# --- Bot Functions [No Changes Here] ---
+# --- Bot Functions ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text("سلام! لطفاً شناسه قبض ۱۳ رقمی خود را وارد کنید.")
     return GETTING_BILL_ID
@@ -124,8 +124,6 @@ async def main():
     """Sets up and runs the Telegram bot."""
     nest_asyncio.apply()
 
-    # ** THE FIX IS HERE **
-    # Read the token inside the main function to fix the scope issue
     TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
     if not TELEGRAM_TOKEN:
         print("Error: TELEGRAM_TOKEN environment variable not set!")
