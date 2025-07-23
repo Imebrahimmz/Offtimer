@@ -11,7 +11,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.chrome.service import Service as ChromeService
-from webdriver_manager.chrome import ChromeDriverManager
 
 from telegram import Update
 from telegram.ext import (
@@ -44,12 +43,13 @@ GETTING_BILL_ID, GETTING_CAPTCHA = range(2)
 
 # --- Selenium Setup ---
 def get_driver():
+    """Sets up the Chrome driver for the Docker environment."""
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
-    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=chrome_options)
-    return driver
+    # The Dockerfile now installs chromedriver, so we don't need webdriver-manager
+    return webdriver.Chrome(service=ChromeService(), options=chrome_options)
 
 # --- Bot Functions ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -114,7 +114,6 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return ConversationHandler.END
 
 # --- Main execution logic ---
-
 def run_flask():
     """Runs the Flask web server in a separate thread."""
     port = int(os.environ.get("PORT", 10000))
@@ -129,13 +128,11 @@ async def main():
         print("Error: TELEGRAM_TOKEN environment variable not set!")
         return
 
-    # Run Flask in a separate thread
     flask_thread = threading.Thread(target=run_flask)
     flask_thread.daemon = True
     flask_thread.start()
     print(f"Web server started in a background thread.")
 
-    # Set up the bot application
     application = Application.builder().token(TELEGRAM_TOKEN).build()
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
@@ -147,10 +144,8 @@ async def main():
     )
     application.add_handler(conv_handler)
     
-    # Run the bot
     print("Bot is starting polling...")
     await application.run_polling()
-
 
 if __name__ == "__main__":
     asyncio.run(main())
