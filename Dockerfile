@@ -4,23 +4,53 @@ FROM python:3.10-slim
 # Set the working directory in the container
 WORKDIR /app
 
-# Install system dependencies needed for Chrome
+# 1. Install system dependencies required by Selenium and Chrome
 RUN apt-get update && apt-get install -y \
+    # Utilities
     wget \
     unzip \
+    # Chrome dependencies
+    libglib2.0-0 \
+    libnss3 \
+    libgconf-2-4 \
+    libfontconfig1 \
+    libx11-6 \
+    libx11-xcb1 \
+    libxcb1 \
+    libxcomposite1 \
+    libxcursor1 \
+    libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    libxi6 \
+    libxrandr2 \
+    libxrender1 \
+    libxss1 \
+    libxtst6 \
+    libasound2 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdbus-1-3 \
+    libdrm2 \
+    libgbm1 \
+    libgtk-3-0 \
+    libpango-1.0-0 \
     --no-install-recommends
 
-# Copy the requirements file into the container
-COPY requirements.txt .
+# 2. Download and install Google Chrome
+RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+RUN apt-get install -y ./google-chrome-stable_current_amd64.deb
 
-# Install any needed packages specified in requirements.txt
+# 3. Copy requirements and install Python packages
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application's code into the container
+# 4. Copy the rest of the application's code
 COPY . .
 
-# Expose the port the app runs on
-EXPOSE 8080
+# 5. Expose the port for the web server
+EXPOSE 10000
 
-# Command to run the application
+# 6. Command to run the application
 CMD ["python", "telegram_bot.py"]
